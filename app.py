@@ -2,8 +2,11 @@ import os
 import json
 from flask import Flask, request, jsonify
 import yt_dlp
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 def sanitize_filename(filename):
     """Replace illegal characters in filename."""
