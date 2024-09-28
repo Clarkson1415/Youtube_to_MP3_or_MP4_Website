@@ -3,9 +3,10 @@ document.getElementById('downloadForm').addEventListener('submit', async functio
 
     const url = document.getElementById('url').value;
     const format = document.getElementById('outputFormat').value;
+    const downloadURL = 'https://youtube-to-mp3-or-mp4-website.onrender.com/download'
 
     // Here, you would call your backend API
-    const response = await fetch('http://127.0.0.1:5000/download', {
+    const response = await fetch(downloadURL, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
