@@ -68,6 +68,7 @@ def extract_video_id(url):
 
 @app.route('/download', methods=['POST'])
 def download():
+    print("Received request to /download")  # Add logging
     data = request.json
     url = data.get('url')
     output_format = data.get('format')
