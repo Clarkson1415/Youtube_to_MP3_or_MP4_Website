@@ -4,7 +4,6 @@ import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import yt_dlp
-import time
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -59,6 +58,14 @@ def download_youtube(url, output_format):
         except Exception as e:
             return None, str(e)
 
+def extract_video_id(url):
+    """Extract video ID from various YouTube URL formats."""
+    if "youtu.be/" in url:
+        return url.split("youtu.be/")[-1]
+    elif "v=" in url:
+        return url.split("v=")[-1].split("&")[0]
+    return None
+
 @app.route('/download', methods=['POST'])
 def download():
     data = request.json
@@ -68,14 +75,15 @@ def download():
     if not url or not output_format:
         return jsonify({"success": False, "error": "URL and format are required."}), 400
 
-    # Extract video ID from the URL
-    video_id = url.split('v=')[-1].split('&')[0]
+    video_id = extract_video_id(url)
+
+    if not video_id:
+        return jsonify({"success": False, "error": "Invalid URL. Please provide a valid YouTube video URL."}), 400
+
     metadata = get_video_metadata(video_id)
 
     if not metadata:
         return jsonify({"success": False, "error": "Could not fetch video metadata."}), 404
-
-    # Check if video is allowed for download based on metadata (you can add more checks here)
 
     file_path, error = download_youtube(url, output_format)
 
