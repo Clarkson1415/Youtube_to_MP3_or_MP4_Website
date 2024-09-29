@@ -1,11 +1,34 @@
 import os
 import json
+import requests
 from flask import Flask, request, jsonify
-import yt_dlp
 from flask_cors import CORS
+import yt_dlp
+import time
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
+
+load_dotenv()  # Load variables from .env
+
+# Your YouTube Data API key
+API_KEY = os.getenv('YOUTUBE_API_KEY')
+
+def get_video_metadata(video_id):
+    url = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={API_KEY}&part=snippet,contentDetails,statistics'
+    
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if 'items' in data and len(data['items']) > 0:
+            return data['items'][0]  # Return the first video's metadata
+        else:
+            return None
+    else:
+        print(f"Error fetching metadata: {response.status_code} - {response.text}")
+        return None
 
 def sanitize_filename(filename):
     """Replace illegal characters in filename."""
@@ -14,31 +37,17 @@ def sanitize_filename(filename):
 def download_youtube(url, output_format):
     """Download YouTube video and return the file path."""
     output_path = os.path.join(os.path.expanduser('~'), 'YTtoMP3')
-
     os.makedirs(output_path, exist_ok=True)
 
-    ydl_opts = {}
-    if output_format == 'mp3':
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-            'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
-        }
-    elif output_format == 'mp4':
-        ydl_opts = {
-            'format': 'bestvideo+bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
-            }],
-            'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
-        }
-    else:
-        return None, "Invalid format selected."
+    ydl_opts = {
+        'format': 'bestaudio/best' if output_format == 'mp3' else 'bestvideo+bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio' if output_format == 'mp3' else 'FFmpegVideoConvertor',
+            'preferredcodec': 'mp3' if output_format == 'mp3' else 'mp4',
+            'preferredquality': '192' if output_format == 'mp3' else None,
+        }],
+        'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
+    }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
@@ -58,6 +67,15 @@ def download():
 
     if not url or not output_format:
         return jsonify({"success": False, "error": "URL and format are required."}), 400
+
+    # Extract video ID from the URL
+    video_id = url.split('v=')[-1].split('&')[0]
+    metadata = get_video_metadata(video_id)
+
+    if not metadata:
+        return jsonify({"success": False, "error": "Could not fetch video metadata."}), 404
+
+    # Check if video is allowed for download based on metadata (you can add more checks here)
 
     file_path, error = download_youtube(url, output_format)
 
