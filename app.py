@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify
 import yt_dlp
 from flask_cors import CORS
 
-
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
@@ -28,7 +27,6 @@ def download_youtube(url, output_format):
                 'preferredquality': '192',
             }],
             'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
-            'ffmpeg_location': r'C:\ffmpeg\bin',
         }
     elif output_format == 'mp4':
         ydl_opts = {
@@ -38,7 +36,6 @@ def download_youtube(url, output_format):
                 'preferedformat': 'mp4',
             }],
             'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
-            'ffmpeg_location': r'C:\ffmpeg\bin',
         }
     else:
         return None, "Invalid format selected."
@@ -70,4 +67,4 @@ def download():
     return jsonify({"success": True, "file_path": file_path}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
