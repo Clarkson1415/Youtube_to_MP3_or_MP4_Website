@@ -20,9 +20,9 @@ if not API_KEY:
 
 def get_video_metadata(video_id):
     url = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={API_KEY}&part=snippet,contentDetails,statistics'
-    
+
     response = requests.get(url)
-    
+
     if response.status_code == 200:
         data = response.json()
         if 'items' in data and len(data['items']) > 0:
@@ -33,9 +33,11 @@ def get_video_metadata(video_id):
         print(f"Error fetching metadata: {response.status_code} - {response.text}")
         return None
 
+
 def sanitize_filename(filename):
     """Replace illegal characters in filename."""
     return filename.replace(':', '').replace('?', '').replace('/', '_').replace('\\', '_').replace(' ', '_')
+
 
 def download_youtube(url, output_format):
     """Download YouTube video and return the file path."""
@@ -52,6 +54,9 @@ def download_youtube(url, output_format):
         'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
         'nocheckcertificate': True,  # Skip SSL certificate check
         'age_limit': 18,  # Attempt to bypass age restrictions
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36',
+        # Set a common user-agent
+        # 'cookiefile': '/path/to/cookies.txt'  # Optional: Provide a cookie file path if you have it
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -64,6 +69,7 @@ def download_youtube(url, output_format):
         except Exception as e:
             return None, str(e)
 
+
 def extract_video_id(url):
     """Extract video ID from various YouTube URL formats."""
     if "youtu.be/" in url:
@@ -71,6 +77,7 @@ def extract_video_id(url):
     elif "v=" in url:
         return url.split("v=")[-1].split("&")[0]
     return None
+
 
 @app.route('/download', methods=['POST'])
 def download():
@@ -103,6 +110,7 @@ def download():
     except Exception as e:
         print(f"Error: {str(e)}")  # Log the error
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
