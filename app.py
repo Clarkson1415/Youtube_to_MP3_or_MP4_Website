@@ -7,7 +7,8 @@ import yt_dlp
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r"/download": {"origins": "https://clarkson1415.github.io"}})
 
 load_dotenv()  # Load variables from .env
 
@@ -74,29 +75,34 @@ def extract_video_id(url):
 @app.route('/download', methods=['POST'])
 def download():
     print("Received request to /download")  # Add logging
-    data = request.json
-    url = data.get('url')
-    output_format = data.get('format')
+    try:
+        data = request.json
+        url = data.get('url')
+        output_format = data.get('format')
 
-    if not url or not output_format:
-        return jsonify({"success": False, "error": "URL and format are required."}), 400
+        if not url or not output_format:
+            return jsonify({"success": False, "error": "URL and format are required."}), 400
 
-    video_id = extract_video_id(url)
+        video_id = extract_video_id(url)
 
-    if not video_id:
-        return jsonify({"success": False, "error": "Invalid URL. Please provide a valid YouTube video URL."}), 400
+        if not video_id:
+            return jsonify({"success": False, "error": "Invalid URL. Please provide a valid YouTube video URL."}), 400
 
-    metadata = get_video_metadata(video_id)
+        metadata = get_video_metadata(video_id)
 
-    if not metadata:
-        return jsonify({"success": False, "error": "Could not fetch video metadata."}), 404
+        if not metadata:
+            return jsonify({"success": False, "error": "Could not fetch video metadata."}), 404
 
-    file_path, error = download_youtube(url, output_format)
+        file_path, error = download_youtube(url, output_format)
 
-    if error:
-        return jsonify({"success": False, "error": error}), 500
+        if error:
+            return jsonify({"success": False, "error": error}), 500
 
-    return jsonify({"success": True, "file_path": file_path}), 200
+        return jsonify({"success": True, "file_path": file_path}), 200
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Log the error
+        return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
