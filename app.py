@@ -13,6 +13,9 @@ load_dotenv()  # Load variables from .env
 
 # Your YouTube Data API key
 API_KEY = os.getenv('YOUTUBE_API_KEY')
+if not API_KEY:
+    raise ValueError("YOUTUBE_API_KEY environment variable is not set.")
+
 
 def get_video_metadata(video_id):
     url = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={API_KEY}&part=snippet,contentDetails,statistics'
@@ -46,6 +49,8 @@ def download_youtube(url, output_format):
             'preferredquality': '192' if output_format == 'mp3' else None,
         }],
         'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
+        'nocheckcertificate': True,  # Skip SSL certificate check
+        'age_limit': 18,  # Attempt to bypass age restrictions
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
