@@ -54,7 +54,7 @@ def download_youtube(url, output_format):
         'outtmpl': os.path.join(output_path, f"{sanitize_filename('%(title)s.%(ext)s')}"),
         'nocheckcertificate': True,
         'age_limit': 18,
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',   
         # 'proxy': 'http://your_proxy_address:port',  # Optional: use a proxy
         'geo_bypass': True,  # Attempt to bypass geographic restrictions
         # 'cookiefile': '/path/to/cookies.txt'  # Optional: Provide a cookie file path if you have it
